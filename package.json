@@ -8,5 +8,8 @@
   },
   "dependencies": {
     "adm-zip": "^0.5.16"
+  },
+  "engines": {
+    "node": "22.x"
   }
 }
