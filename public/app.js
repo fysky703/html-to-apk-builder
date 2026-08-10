@@ -141,6 +141,15 @@ function appendFile(fd, field, inputId, maxBytes) {
   return true;
 }
 
+async function readApiResponse(res) {
+  const text = await res.text();
+  let data;
+  try { data = text ? JSON.parse(text) : {}; }
+  catch { throw new Error(text || `Server returned HTTP ${res.status}`); }
+  if (!res.ok) throw new Error(data.error || `Server returned HTTP ${res.status}`);
+  return data;
+}
+
 async function build() {
   $("error").classList.add("hidden");
   $("download").classList.add("hidden");
@@ -195,8 +204,7 @@ async function build() {
 
     setStatus("Starting build…", "Uploading your HTML, icon, splash and app settings.", 8);
     const res = await fetch("/api/build", { method: "POST", body: fd });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || "Build request failed.");
+    const data = await readApiResponse(res);
 
     setStatus("Build queued", "GitHub Actions is preparing the Android build.", 20);
     poll(data.run_id);
@@ -208,8 +216,7 @@ async function build() {
 async function poll(runId) {
   try {
     const res = await fetch(`/api/status?run_id=${encodeURIComponent(runId)}`);
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || "Status check failed.");
+    const data = await readApiResponse(res);
 
     if (data.status === "queued") {
       setStatus("Waiting…", "The build is queued on GitHub Actions.", 25);
