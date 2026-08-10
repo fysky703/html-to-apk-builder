@@ -36,7 +36,7 @@ export async function GET(req) {
       const ar = await fetch(`https://api.github.com/repos/${owner}/${repo}/actions/runs/${run.id}/artifacts`, { headers: headers() });
       if (!ar.ok) return json({ ...out, error: "Build succeeded but artifacts could not be read." }, ar.status);
       const data = await ar.json();
-      const artifact = (data.artifacts || []).find(x => x.name.startsWith("html-to-apk-") && !x.expired);
+      const artifact = (data.artifacts || []).find(x => !x.expired && x.name.startsWith("html-to-apk-"));
       if (artifact) {
         out.artifact_id = artifact.id;
         out.artifact_name = artifact.name;
