@@ -4,21 +4,39 @@ on:
   workflow_dispatch:
     inputs:
       app_name:
-        description: "App name"
+        description: "Application name"
         required: true
         default: "My Web App"
       package_name:
         description: "Android package name"
         required: true
         default: "com.example.mywebapp"
+      version_name:
+        description: "Version name"
+        required: true
+        default: "1.0"
+      version_code:
+        description: "Build number"
+        required: true
+        default: "1"
+      splash_type:
+        description: "Splash type"
+        required: true
+        default: "image"
+      config_sha:
+        description: "Exact builder config commit SHA"
+        required: true
+        default: ""
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
+      - name: Checkout exact builder commit
         uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.config_sha }}
 
       - name: Setup JDK
         uses: actions/setup-java@v4
@@ -30,26 +48,71 @@ jobs:
         uses: android-actions/setup-android@v3
 
       - name: Install Android SDK
-        run: |
-          sdkmanager "platforms;android-35" "build-tools;35.0.0"
+        run: sdkmanager "platforms;android-35" "build-tools;35.0.0"
 
-      - name: Update app metadata
+      - name: Configure Android project from builder-config.json
         env:
           APP_NAME: ${{ inputs.app_name }}
           PACKAGE_NAME: ${{ inputs.package_name }}
+          VERSION_NAME: ${{ inputs.version_name }}
+          VERSION_CODE: ${{ inputs.version_code }}
         run: |
           python3 - <<'PY'
-          import os, pathlib, re
-          name = os.environ["APP_NAME"].replace('"','').replace('\n',' ')[:40]
-          pkg = os.environ["PACKAGE_NAME"]
-          p = pathlib.Path("app/src/main/AndroidManifest.xml")
-          s = p.read_text()
-          s = re.sub(r'android:label="[^"]*"', f'android:label="{name}"', s)
-          p.write_text(s)
-          p = pathlib.Path("app/build.gradle")
-          s = p.read_text()
-          s = re.sub(r'applicationId\s+"[^"]+"', f'applicationId "{pkg}"', s)
-          p.write_text(s)
+          import json, os, pathlib, re, shutil
+
+          root = pathlib.Path('.')
+          cfg = json.loads((root/'app/src/main/assets/builder-config.json').read_text())
+
+          app_name = os.environ['APP_NAME'].replace('"','').replace('\n',' ')[:40]
+          package = os.environ['PACKAGE_NAME'].lower()
+          version_name = os.environ['VERSION_NAME']
+          version_code = os.environ['VERSION_CODE']
+
+          # Manifest
+          p = root/'app/src/main/AndroidManifest.xml'
+          text = p.read_text()
+          text = re.sub(r'android:label="[^"]*"', f'android:label="{app_name}"', text)
+          text = re.sub(r'android:icon="[^"]*"', 'android:icon="@mipmap/ic_launcher"', text)
+          p.write_text(text)
+
+          # Gradle metadata
+          p = root/'app/build.gradle'
+          text = p.read_text()
+          text = re.sub(r'applicationId\s+["\'][^"\']+["\']', f'applicationId "{package}"', text)
+          text = re.sub(r'versionCode\s+\d+', f'versionCode {int(version_code)}', text)
+          text = re.sub(r'versionName\s+["\'][^"\']+["\']', f'versionName "{version_name}"', text)
+          p.write_text(text)
+
+          # Icon: builder accepts any uploaded bytes, but Android resource extension must be PNG.
+          icon = root/'app/src/main/res/mipmap-xxxhdpi/ic_launcher.png'
+          if not icon.exists():
+              raise SystemExit('App icon not found. Upload an App Icon in the Builder.')
+
+          # Permissions are generated from the builder config.
+          manifest = root/'app/src/main/AndroidManifest.xml'
+          text = manifest.read_text()
+          text = re.sub(r'\n\s*<!-- BUILDER_PERMISSIONS -->.*?<!-- /BUILDER_PERMISSIONS -->\n', '\n', text, flags=re.S)
+          perms = cfg.get('permissions', [])
+          block = '\n'.join(f'    <uses-permission android:name="android.permission.{x}" />' for x in perms)
+          text = text.replace('    <!-- BUILDER_PERMISSIONS -->\n    <!-- /BUILDER_PERMISSIONS -->', '    <!-- BUILDER_PERMISSIONS -->\n' + block + '\n    <!-- /BUILDER_PERMISSIONS -->')
+          manifest.write_text(text)
+          PY
+
+      - name: Prepare splash assets
+        run: |
+          python3 - <<'PY'
+          import json, pathlib, shutil
+          root = pathlib.Path('.')
+          cfg = json.loads((root/'app/src/main/assets/builder-config.json').read_text())
+          splash = cfg.get('splashType', 'image')
+          asset = root/'app/src/main/assets/splash'
+          asset.mkdir(parents=True, exist_ok=True)
+          if splash == 'image' and not (asset/'splash-image.bin').exists():
+              raise SystemExit('Splash image not found.')
+          if splash == 'video' and not (asset/'splash-video.mp4').exists():
+              raise SystemExit('Splash video not found.')
+          if splash == 'html' and not (asset/'splash.html').exists():
+              raise SystemExit('Splash HTML not found.')
           PY
 
       - name: Setup Gradle
@@ -61,11 +124,11 @@ jobs:
       - name: Rename APK
         run: |
           mkdir -p dist
-          cp app/build/outputs/apk/debug/app-debug.apk "dist/${{ inputs.app_name }}-debug.apk"
+          cp app/build/outputs/apk/debug/app-debug.apk "dist/${{ inputs.app_name }}-${{ inputs.version_name }}-${{ inputs.version_code }}.apk"
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: html-to-apk
+          name: html-to-apk-${{ inputs.version_code }}
           path: dist/*.apk
           retention-days: 3
