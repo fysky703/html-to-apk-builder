@@ -1,0 +1,12 @@
+{
+  "name": "html-to-apk-builder",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "vercel dev"
+  },
+  "dependencies": {
+    "adm-zip": "^0.5.16"
+  }
+}
