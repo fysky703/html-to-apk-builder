@@ -1,160 +1,67 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-  <meta name="theme-color" content="#0b0b0f">
-  <title>HTML → APK Builder</title>
-  <link rel="stylesheet" href="/style.css">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>HTML Or URL → APK Builder</title>
+<link rel="stylesheet" href="/style.css">
 </head>
 <body>
-  <div class="ambient a1"></div>
-  <div class="ambient a2"></div>
+<main class="glass">
+<h1>HTML Or URL Site → APK Builder</h1>
 
-  <main class="shell">
-    <header class="topbar glass">
-      <div class="brand">
-        <div class="logo">⌁</div>
-        <div>
-          <strong>HTML → APK</strong>
-          <span>Android WebView Builder</span>
-        </div>
-      </div>
-      <div class="badge">GitHub Actions</div>
-    </header>
+<div class="row">
+  <button type="button" id="urlMode" class="active">Website URL</button>
+  <button type="button" id="htmlMode">Upload HTML</button>
+</div>
 
-    <section class="hero">
-      <div class="eyebrow">BUILD YOUR WEBSITE AS AN APP</div>
-      <h1>Turn HTML into an Android APK.</h1>
-      <p>Paste a website URL or upload an HTML file, choose your app settings, then start a cloud build.</p>
-    </section>
+<form id="buildForm">
+  <label>App Name</label>
+  <input id="appName" value="My Web App" required>
 
-    <section class="card glass">
-      <div class="field">
-        <label for="appName">App name</label>
-        <input id="appName" maxlength="40" value="My Web App" placeholder="e.g. KH UNiFY Ai">
-      </div>
+  <label>Package Name</label>
+  <input id="packageName" value="com.example.mywebapp" required>
 
-      <div class="field">
-        <label for="packageName">Package name</label>
-        <input id="packageName" maxlength="80" value="com.example.mywebapp" placeholder="com.example.myapp">
-        <small>Use lowercase letters, numbers and dots.</small>
-      </div>
+  <section id="urlBox">
+    <label>Website URL</label>
+    <input id="url" placeholder="https://example.com">
+  </section>
 
-      <div class="field grid2">
-        <div>
-          <label for="versionName">Version</label>
-          <input id="versionName" maxlength="20" value="1.0" placeholder="1.0">
-        </div>
-        <div>
-          <label for="versionCode">Build</label>
-          <input id="versionCode" type="number" min="1" step="1" value="1" placeholder="1">
-        </div>
-      </div>
+  <section id="htmlBox" hidden>
+    <label>Upload HTML</label>
+    <input id="htmlFile" type="file" accept=".html,.htm,text/html">
+  </section>
 
-      <div class="tabs">
-        <button class="tab active" data-mode="url">Website URL</button>
-        <button class="tab" data-mode="file">Upload HTML</button>
-      </div>
+  <label>Upload App Icon</label>
+  <input type="file" accept="image/png,image/jpeg">
 
-      <div id="urlPane" class="pane">
-        <label for="url">Website URL</label>
-        <input id="url" type="url" placeholder="https://example.com">
-        <small>The builder fetches the HTML document before packaging it.</small>
-      </div>
+  <label>Splash Screen</label>
+  <select>
+    <option>Image</option>
+    <option>Video</option>
+    <option>Video URL</option>
+    <option>HTML Animation</option>
+  </select>
 
-      <div id="filePane" class="pane hidden">
-        <label class="drop" id="drop">
-          <input id="file" type="file" accept=".html,.htm,text/html">
-          <span class="dropIcon">↑</span>
-          <strong>Choose an HTML file</strong>
-          <small id="fileName">or tap to browse</small>
-        </label>
-      </div>
+  <div class="grid">
+    <div><label>Version</label><input value="1.0"></div>
+    <div><label>Build</label><input value="1" type="number" min="1"></div>
+  </div>
 
-      <div class="sectionTitle">App Icon</div>
-      <label class="drop compact" id="iconDrop">
-        <input id="icon" type="file" accept="image/png,image/jpeg,image/webp">
-        <span class="dropIcon">◈</span>
-        <strong>Upload App Icon</strong>
-        <small id="iconName">PNG/JPG/WEBP · recommended 512×512</small>
-      </label>
+  <label>Application Licensing</label>
+  <div class="permissions">
+    <label><input type="checkbox" checked> INTERNET</label>
+    <label><input type="checkbox"> CAMERA</label>
+    <label><input type="checkbox"> RECORD_AUDIO</label>
+    <label><input type="checkbox"> VIBRATE</label>
+  </div>
 
-      <div class="sectionTitle">Splash Screen</div>
-      <div class="tabs splashTabs">
-        <button class="tab active" data-splash="image">Image</button>
-        <button class="tab" data-splash="video">Video</button>
-        <button class="tab" data-splash="video_url">Video URL</button>
-        <button class="tab" data-splash="html">HTML Animation</button>
-      </div>
+  <button class="build" type="submit">BUILD APK</button>
+</form>
 
-      <div id="splashImagePane" class="pane splashPane">
-        <label class="drop compact">
-          <input id="splashImage" type="file" accept="image/png,image/jpeg,image/webp">
-          <span class="dropIcon">▧</span>
-          <strong>Upload Splash Image</strong>
-          <small id="splashImageName">PNG/JPG/WEBP</small>
-        </label>
-      </div>
-
-      <div id="splashVideoPane" class="pane splashPane hidden">
-        <label class="drop compact">
-          <input id="splashVideo" type="file" accept="video/mp4,video/webm,video/*">
-          <span class="dropIcon">▶</span>
-          <strong>Upload Splash Video</strong>
-          <small id="splashVideoName">MP4/WebM · keep the file reasonably small</small>
-        </label>
-      </div>
-
-      <div id="splashUrlPane" class="pane splashPane hidden">
-        <label for="splashUrl">Splash Video URL</label>
-        <input id="splashUrl" type="url" placeholder="https://example.com/splash.mp4">
-        <small>The device needs Internet access to play a remote video.</small>
-      </div>
-
-      <div id="splashHtmlPane" class="pane splashPane hidden">
-        <label class="drop compact">
-          <input id="splashHtml" type="file" accept=".html,.htm,text/html">
-          <span class="dropIcon">&lt;/&gt;</span>
-          <strong>Upload HTML Animation</strong>
-          <small id="splashHtmlName">Single HTML file · CSS/JS animation supported</small>
-        </label>
-      </div>
-
-      <div class="sectionTitle licensingTitle">Application Licensing</div>
-      <p class="licenseHint">Check the required permissions</p>
-      <div id="permissionList" class="permissionList"></div>
-      <div class="customPermission">
-        <input id="customPermission" placeholder="android.permission.CUSTOM_PERMISSION">
-        <button id="addPermission" type="button">+ Plus</button>
-      </div>
-      <div class="permissionCount"><span id="permissionCount">0</span> permissions selected</div>
-
-      <button id="buildBtn" class="buildBtn">
-        <span>🚀</span>
-        <span>Build APK</span>
-      </button>
-
-      <div id="status" class="status hidden">
-        <div class="statusHead">
-          <strong id="statusTitle">Preparing build…</strong>
-          <span id="statusPct">0%</span>
-        </div>
-        <div class="progress"><i id="bar"></i></div>
-        <p id="statusText">Sending project to the build server.</p>
-        <a id="download" class="download hidden" href="#" target="_blank" rel="noopener">⬇ Download APK artifact</a>
-      </div>
-
-      <div id="error" class="error hidden"></div>
-    </section>
-
-    <footer>
-      <span>HTML/CSS/JS → Android WebView</span>
-      <span>•</span>
-      <span>Builds run on GitHub Actions</span>
-    </footer>
-  </main>
-
-  <script src="/app.js"></script>
+<pre id="status"></pre>
+<a id="download" hidden>DOWNLOAD APK</a>
+</main>
+<script src="/app.js"></script>
 </body>
 </html>
