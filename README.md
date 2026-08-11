@@ -1,24 +1,20 @@
-# HTML → APK Builder v2
+# HTML Or URL → APK Builder — V4
 
-Adds, without redesigning the existing UI:
+## Important fixes
 
-- HTML file or URL input
-- App name and package name
-- Version name + build number
-- App icon upload
-- Splash: image, video, remote video URL, or HTML animation
-- Application Licensing permission selector
-- GitHub Actions build
-- Exact commit checkout so the APK uses the uploaded HTML/config instead of the template demo
+1. HTML upload is sent as JSON after the browser reads the file. This avoids `req.formData is not a function` and Vercel `FUNCTION_INVOCATION_FAILED`.
+2. URL mode never fetches the URL on Vercel. It creates a small local HTML redirect page; Android WebView opens the real URL on the device. This removes the server-side 403 fetch problem.
+3. API handlers use the Vercel Node.js handler style (`export default function handler(req,res)`).
+4. `api/artifact.js` returns the GitHub artifact ZIP directly, so no ZIP parser dependency is required.
 
-## Required Vercel environment variables
+## Environment variables
 
-- `GITHUB_TOKEN`
-- `GITHUB_OWNER`
-- `GITHUB_REPO`
-- `GITHUB_BRANCH` (usually `main`)
-- `GITHUB_WORKFLOW` (usually `android.yml`)
+GITHUB_TOKEN
+GITHUB_OWNER=fysky703
+GITHUB_REPO=html-to-apk
+GITHUB_BRANCH=main
+GITHUB_WORKFLOW=android.yml
 
 ## Android repository
 
-The target Android repository must contain the matching WebView template and the workflow from `github-workflow/android.yml`. The Builder updates `app/src/main/assets/index.html`, `builder-config.json`, and splash/icon assets before dispatching the workflow.
+The workflow must be present at `.github/workflows/android.yml` in the Android repository (`html-to-apk`).
