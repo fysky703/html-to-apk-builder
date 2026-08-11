@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Get License Key - NEXORA AI Management Portal</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<!-- Firebase JS SDK (Compat mode) -->
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+
+<script>
+  tailwind.config = {
+    darkMode: 'class',
+    theme: {
+      extend: {
+        colors: {
+          brand: {
+            red: '#ff1d25',
+            orange: '#ff8a00',
+            yellow: '#ffe000',
+            accent: '#ff6500',
+            dark: '#0b0b0e',
+            surface: '#151518',
+            surface2: '#222226',
+            border: '#2c2c31'
+          }
+        }
+      }
+    }
+  }
+</script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap');
+  body {
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    background-color: #0b0b0e;
+    color: #f5f5f5;
+  }
+  .gradient-text {
+    background: linear-gradient(135deg, #ff1d25, #ff8a00, #ffe000);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .gradient-bg {
+    background: linear-gradient(135deg, #ff1d25, #ff8a00, #ffe000);
+  }
+  .mono {
+    font-family: 'JetBrains Mono', monospace;
+  }
+</style>
+</head>
+<body class="min-h-screen bg-brand-dark text-gray-100 flex flex-col justify-between selection:bg-brand-accent selection:text-white">
+
+<!-- Cleaned & Organized Header Bar -->
+<header class="border-b border-brand-border bg-brand-surface/90 backdrop-blur-md sticky top-0 z-50">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
+    <div class="flex items-center gap-3">
+      <img src="https://c.termai.cc/i163/T8H.png" alt="NEXORA Logo" class="w-10 h-10 rounded-xl shadow-lg shadow-brand-accent/20 object-cover border border-brand-border">
+      <div>
+        <h1 class="font-bold text-lg leading-tight flex items-center gap-2">
+          NEXORA AI <span class="gradient-text text-sm font-semibold">License Manager</span>
+        </h1>
+        <p class="text-xs text-gray-400">Firebase Realtime License & Plan Management Portal</p>
+      </div>
+    </div>
+    
+    <div class="flex items-center gap-3">
+      <span id="firebaseStatusBadge" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-amber-500/10 text-amber-400 border border-amber-500/20">
+        <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span> Connecting Cloud Database...
+      </span>
+    </div>
+  </div>
+</header>
+
+<main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1 w-full grid grid-cols-1 lg:grid-cols-12 gap-8">
+  
+  <!-- Left Column: Generator Form -->
+  <div class="lg:col-span-5 space-y-6">
+    <div class="bg-brand-surface border border-brand-border rounded-2xl p-6 shadow-xl relative overflow-hidden">
+      <div class="absolute -right-12 -top-12 w-32 h-32 bg-brand-accent/10 rounded-full blur-2xl pointer-events-none"></div>
+      
+      <div class="flex items-center gap-2 mb-4">
+        <svg class="w-5 h-5 text-brand-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 0121 9z"></path>
+        </svg>
+        <h2 class="text-lg font-bold text-white">Generate License Key & Set Plan</h2>
+      </div>
+
+      <form id="keyForm" onsubmit="event.preventDefault(); generateAndSaveLicense();" class="space-y-4">
+        <div>
+          <label class="block text-xs font-semibold text-gray-400 mb-1.5 uppercase tracking-wider">Customer Email Address</label>
+          <div class="relative">
+            <input type="email" id="emailInput" required placeholder="user@example.com"
+              class="w-full bg-brand-surface2 border border-brand-border rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-brand-accent transition-colors pl-10">
+            <svg class="w-4 h-4 text-gray-500 absolute left-3.5 top-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207"></path>
+            </svg>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-semibold text-gray-400 mb-1.5 uppercase tracking-wider">Plan Status Tier</label>
+            <select id="planSelect" onchange="toggleCustomPlanInput()" class="w-full bg-brand-surface2 border border-brand-border rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:border-brand-accent transition-colors">
+              <option value="Free">Free</option>
+              <option value="Pro">Pro</option>
+              <option value="VIP" selected>VIP</option>
+              <option value="VVIP">VVIP</option>
+              <option value="Custom">Custom Plan Name...</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-gray-400 mb-1.5 uppercase tracking-wider">Duration</label>
+            <select id="durationSelect" onchange="toggleCustomDurationInput()" class="w-full bg-brand-surface2 border border-brand-border rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:border-brand-accent transition-colors">
+              <option value="30 Days">30 Days</option>
+              <option value="90 Days">90 Days</option>
+              <option value="1 Year">1 Year</option>
+              <option value="Lifetime">Lifetime Unlimited</option>
+              <option value="Custom">Custom Duration...</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Custom Plan Name Input -->
+        <div id="customPlanGroup" class="hidden">
+          <label class="block text-xs font-semibold text-gray-400 mb-1.5 uppercase tracking-wider">Custom Plan Name</label>
+          <input type="text" id="customPlanInput" placeholder="e.g. Ultra VIP / Enterprise"
+            class="w-full bg-brand-surface2 border border-brand-border rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-brand-accent">
+        </div>
+
+        <!-- Custom Duration Input -->
+        <div id="customDurationGroup" class="hidden">
+          <label class="block text-xs font-semibold text-gray-400 mb-1.5 uppercase tracking-wider">Custom Duration Value</label>
+          <input type="text" id="customDurationInput" placeholder="e.g. 6 Months / 180 Days"
+            class="w-full bg-brand-surface2 border border-brand-border rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-brand-accent">
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-gray-400 mb-1.5 uppercase tracking-wider">License Key Prefix</label>
+          <div class="grid grid-cols-3 gap-2">
+            <label class="cursor-pointer">
+              <input type="radio" name="prefix" value="UNIFY-VIP-" checked class="peer sr-only">
+              <div class="p-2.5 rounded-xl border border-brand-border bg-brand-surface2 text-center text-xs font-semibold text-gray-400 peer-checked:border-brand-accent peer-checked:text-white peer-checked:bg-brand-accent/10 transition-all">
+                UNIFY-VIP-
+              </div>
+            </label>
+            <label class="cursor-pointer">
+              <input type="radio" name="prefix" value="sk-unify-" class="peer sr-only">
+              <div class="p-2.5 rounded-xl border border-brand-border bg-brand-surface2 text-center text-xs font-semibold text-gray-400 peer-checked:border-brand-accent peer-checked:text-white peer-checked:bg-brand-accent/10 transition-all">
+                sk-unify-
+              </div>
+            </label>
+            <label class="cursor-pointer">
+              <input type="radio" name="prefix" value="UNIFY-KEY-" class="peer sr-only">
+              <div class="p-2.5 rounded-xl border border-brand-border bg-brand-surface2 text-center text-xs font-semibold text-gray-400 peer-checked:border-brand-accent peer-checked:text-white peer-checked:bg-brand-accent/10 transition-all">
+                UNIFY-KEY-
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-gray-400 mb-1.5 uppercase tracking-wider">Backend DeepSeek Engine API Key</label>
+          <input type="password" id="backendDeepseekKey" value="sk-d0b7d5c35c0f411b83103c9a91253292" required placeholder="sk-..."
+            class="w-full bg-brand-surface2 border border-brand-border rounded-xl px-4 py-2 text-xs text-white focus:outline-none focus:border-brand-accent mono">
+          <p class="text-[10px] text-gray-500 mt-1">This official DeepSeek key will be attached to the license string in Firebase to authorize model requests.</p>
+        </div>
+
+        <button type="submit" id="submitBtn" class="w-full py-3 px-4 rounded-xl font-bold text-white gradient-bg hover:opacity-95 transition-opacity shadow-lg shadow-brand-accent/25 flex items-center justify-center gap-2">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+          </svg>
+          Generate & Sync License Key
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Right Column: Result Card & Telegram Notice -->
+  <div class="lg:col-span-7 space-y-6">
+    <div class="bg-brand-surface border border-brand-border rounded-2xl p-6 shadow-xl relative">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-sm font-bold text-gray-300 uppercase tracking-wider flex items-center gap-2">
+          <span class="w-2.5 h-2.5 rounded-full bg-brand-accent"></span> Issued License Key Result
+        </h3>
+        <span id="createdTimestamp" class="text-xs text-gray-500 font-mono">Ready</span>
+      </div>
+
+      <div class="space-y-4">
+        <div class="bg-brand-surface2 border border-brand-border rounded-xl p-4 flex items-center justify-between gap-3">
+          <div class="min-w-0 flex-1">
+            <div class="text-xs text-gray-400 mb-1">Generated License Key:</div>
+            <div id="keyDisplay" class="mono text-base font-bold text-brand-orange truncate selection:bg-brand-accent">
+              Click "Generate" to create a license key
+            </div>
+          </div>
+          <button id="copyKeyBtn" onclick="copyToClipboard('keyDisplay', 'copyKeyBtn')" class="px-3.5 py-2 bg-brand-surface border border-brand-border hover:border-brand-accent rounded-lg text-xs font-semibold text-white transition-colors flex items-center gap-1.5 shrink-0">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+            </svg>
+            <span>Copy</span>
+          </button>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-gray-400 mb-1.5 uppercase tracking-wider">Telegram Customer Dispatch Notice</label>
+          <div class="relative">
+            <textarea id="telegramSnippet" rows="6" readonly class="w-full bg-brand-surface2 border border-brand-border rounded-xl p-3 text-xs text-gray-300 mono focus:outline-none resize-none leading-relaxed" placeholder="Telegram client message preview will appear here..."></textarea>
+            <button id="copyMsgBtn" onclick="copyToClipboard('telegramSnippet', 'copyMsgBtn')" class="absolute right-3 top-3 px-2.5 py-1.5 bg-brand-surface border border-brand-border hover:border-brand-accent rounded-lg text-xs font-semibold text-white transition-colors flex items-center gap-1">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+              </svg>
+              <span>Copy Message</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bottom Full-Width Table: Firebase Synced Registry -->
+  <div class="lg:col-span-12 bg-brand-surface border border-brand-border rounded-2xl p-6 shadow-xl space-y-4">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div>
+        <h3 class="text-base font-bold text-white flex items-center gap-2">
+          Cloud License Registry
+          <span id="keyCountBadge" class="px-2 py-0.5 rounded-full text-xs font-bold bg-brand-accent/20 text-brand-orange border border-brand-accent/30">0 Keys</span>
+        </h3>
+        <p class="text-xs text-gray-400">All issued licenses are synced in real-time to Firebase Realtime Database</p>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <input type="text" id="searchInput" oninput="filterRegistry()" placeholder="Search email or license..."
+          class="bg-brand-surface2 border border-brand-border rounded-xl px-3 py-1.5 text-xs text-white focus:outline-none focus:border-brand-accent w-48">
+        
+        <button onclick="exportKeysJSON()" class="px-3 py-1.5 bg-brand-surface2 border border-brand-border hover:border-brand-accent rounded-xl text-xs font-semibold text-gray-300 transition-colors flex items-center gap-1.5">
+          <svg class="w-3.5 h-3.5 text-brand-orange" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+          </svg>
+          Export JSON
+        </button>
+      </div>
+    </div>
+
+    <div class="overflow-x-auto border border-brand-border rounded-xl">
+      <table class="w-full text-left text-xs">
+        <thead class="bg-brand-surface2 text-gray-400 font-semibold border-b border-brand-border">
+          <tr>
+            <th class="p-3">Customer Email</th>
+            <th class="p-3">License Key</th>
+            <th class="p-3">Plan Status / Duration</th>
+            <th class="p-3">Bound Device ID</th>
+            <th class="p-3">Date Created</th>
+            <th class="p-3 text-right">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="registryTableBody" class="divide-y divide-brand-border text-gray-300">
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</main>
+
+<footer class="border-t border-brand-border bg-brand-surface py-4 text-center text-xs text-gray-500">
+  NEXORA AI License Management Tool &copy; 2026. Powered by Firebase Realtime Database.
+</footer>
+
+<script>
+  // FIREBASE CONFIGURATION
+  const firebaseConfig = {
+    apiKey: "AIzaSyBa7zGD66GlRrJq5NzTxAPjb7nedvkEIhM",
+    authDomain: "my-project-a03ee.firebaseapp.com",
+    databaseURL: "https://my-project-a03ee-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "my-project-a03ee",
+    storageBucket: "my-project-a03ee.firebasestorage.app",
+    messagingSenderId: "615028260326",
+    appId: "1:615028260326:web:e8bef3cffa668e0487aa27",
+    measurementId: "G-LPRTC0DBN5"
+  };
+
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
+
+  let cloudLicensesList = [];
+
+  function toggleCustomPlanInput() {
+    const planSel = document.getElementById("planSelect");
+    const customGroup = document.getElementById("customPlanGroup");
+    if (planSel && customGroup) {
+      if (planSel.value === "Custom") {
+        customGroup.classList.remove("hidden");
+      } else {
+        customGroup.classList.add("hidden");
+      }
+    }
+  }
+
+  function toggleCustomDurationInput() {
+    const durationSel = document.getElementById("durationSelect");
+    const customGroup = document.getElementById("customDurationGroup");
+    if (durationSel && customGroup) {
+      if (durationSel.value === "Custom") {
+        customGroup.classList.remove("hidden");
+      } else {
+        customGroup.classList.add("hidden");
+      }
+    }
+  }
+
+  function initFirebaseListener() {
+    const badge = document.getElementById("firebaseStatusBadge");
+    db.ref("licenses").on("value", snapshot => {
+      badge.className = "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20";
+      badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> Cloud Synced (Firebase Connected)`;
+
+      const data = snapshot.val() || {};
+      cloudLicensesList = Object.keys(data).map(key => ({
+        firebaseKey: key,
+        ...data[key]
+      })).sort((a,b) => (b.timestamp || 0) - (a.timestamp || 0));
+
+      renderRegistry();
+    }, error => {
+      console.error("Firebase Database Error:", error);
+      badge.className = "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-red-500/10 text-red-400 border border-red-500/20";
+      badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-red-400"></span> Firebase Connection Error`;
+    });
+  }
+
+  function generateRandomHex(length) {
+    const chars = '0123456789ABCDEF';
+    let result = '';
+    for (let i = 0; i < length; i++) {
+      result += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return result;
+  }
+
+  function sanitizePathKey(keyStr) {
+    return String(keyStr).replace(/[.$#\[\]\/]/g, "_");
+  }
+
+  async function generateAndSaveLicense() {
+    const email = document.getElementById('emailInput').value.trim();
+    let plan = document.getElementById('planSelect').value;
+    const customPlanName = document.getElementById('customPlanInput').value.trim();
+    let duration = document.getElementById('durationSelect').value;
+    const customDurationName = document.getElementById('customDurationInput').value.trim();
+
+    const selectedPrefix = document.querySelector('input[name="prefix"]:checked').value;
+    const deepseekKey = document.getElementById('backendDeepseekKey').value.trim();
+
+    if (plan === "Custom") {
+      plan = customPlanName || "Custom Plan";
+    }
+
+    if (duration === "Custom") {
+      duration = customDurationName || "Custom Duration";
+    }
+
+    if (!email || !email.includes('@')) {
+      alert('Please enter a valid email address!');
+      return;
+    }
+
+    if (!deepseekKey) {
+      alert('Please enter a valid backend DeepSeek API key!');
+      return;
+    }
+
+    const randomSegment = generateRandomHex(16);
+    const generatedLicenseKey = selectedPrefix + randomSegment;
+    const now = new Date();
+    const dateStr = now.toLocaleDateString() + ' ' + now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+    document.getElementById('keyDisplay').textContent = generatedLicenseKey;
+    document.getElementById('createdTimestamp').textContent = dateStr;
+
+    const tgMsg = `Hello! Thank you for purchasing NEXORA AI VIP Access.\n\n` +
+      `📧 Registered Email: ${email}\n` +
+      `🔑 Your License Key: ${generatedLicenseKey}\n` +
+      `⭐ Plan Status: ${plan} (${duration})\n\n` +
+      `Activation Steps:\n` +
+      `1. Open NEXORA AI Application\n` +
+      `2. Switch Engine to "Mode"\n` +
+      `3. Enter your Registered Email & License Key to activate.\n\n` +
+      `Support: http://t.me/xxiaofei520`;
+
+    document.getElementById('telegramSnippet').value = tgMsg;
+
+    const safePath = sanitizePathKey(generatedLicenseKey);
+    const licenseObject = {
+      key: generatedLicenseKey,
+      email: email,
+      plan: plan,
+      duration: duration,
+      createdAt: dateStr,
+      timestamp: Date.now(),
+      deviceId: "",
+      status: "active",
+      realDeepSeekKey: deepseekKey
+    };
+
+    try {
+      await db.ref('licenses/' + safePath).set(licenseObject);
+      alert(`License Key generated and successfully published to Firebase!\nPlan Status: ${plan}`);
+    } catch(err) {
+      alert('Error saving license to Firebase: ' + err.message);
+    }
+  }
+
+  function renderRegistry(filterQuery = '') {
+    const tbody = document.getElementById('registryTableBody');
+    const badge = document.getElementById('keyCountBadge');
+    tbody.innerHTML = '';
+
+    const filtered = cloudLicensesList.filter(item => 
+      (item.email || '').toLowerCase().includes(filterQuery.toLowerCase()) ||
+      (item.key || '').toLowerCase().includes(filterQuery.toLowerCase())
+    );
+
+    badge.textContent = `${filtered.length} Keys`;
+
+    if (filtered.length === 0) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="6" class="p-6 text-center text-gray-500 italic">
+            No license keys found. Fill out the form above to generate one.
+          </td>
+        </tr>
+      `;
+      return;
+    }
+
+    filtered.forEach(item => {
+      const tr = document.createElement('tr');
+      tr.className = "hover:bg-brand-surface2/50 transition-colors";
+      const boundDev = item.deviceId ? `<span class="mono text-emerald-400 font-semibold">${escapeHtml(item.deviceId)}</span>` : `<span class="text-gray-500 italic">Not bound yet</span>`;
+
+      tr.innerHTML = `
+        <td class="p-3 font-semibold text-white">${escapeHtml(item.email)}</td>
+        <td class="p-3 mono text-brand-orange font-bold">${escapeHtml(item.key)}</td>
+        <td class="p-3"><span class="px-2 py-0.5 rounded bg-brand-surface2 border border-brand-border text-xs text-gray-300 font-bold">${escapeHtml(item.plan || "VIP")} (${escapeHtml(item.duration)})</span></td>
+        <td class="p-3">${boundDev}</td>
+        <td class="p-3 text-gray-400">${escapeHtml(item.createdAt)}</td>
+        <td class="p-3 text-right space-x-2">
+          <button onclick="copyRawText('${escapeHtml(item.key)}')" class="px-2 py-1 bg-brand-surface2 border border-brand-border hover:border-brand-accent rounded text-gray-300 hover:text-white transition-colors">
+            Copy Key
+          </button>
+          ${item.deviceId ? `<button onclick="unbindDevice('${item.firebaseKey}')" class="px-2 py-1 bg-amber-500/10 border border-amber-500/20 hover:border-amber-500/50 rounded text-amber-400 hover:text-amber-300 transition-colors">Reset Device</button>` : ''}
+          <button onclick="deleteLicense('${item.firebaseKey}')" class="px-2 py-1 bg-red-500/10 border border-red-500/20 hover:border-red-500/50 rounded text-red-400 hover:text-red-300 transition-colors">
+            Revoke
+          </button>
+  
