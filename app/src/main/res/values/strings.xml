@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">App Controller Agent</string>
+    <string name="accessibility_description">Allows the agent to perform user-authorized UI actions such as back, home, taps and text entry.</string>
+</resources>
